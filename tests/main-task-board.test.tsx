@@ -275,7 +275,7 @@ test('パネル: ターミナルの通常の表示でだけ、横に出す方法
     props: { ...PANE.props, placement: 'inline' },
   })
   expect(await shown(inline, /横に出すには.*"tui": "fullscreen"/)).toBe('')
-  expect(await shown(inline, /\/ask 質問の文.*\/now をもう一度/)).toBe('')
+  expect(await shown(inline, /\/ask で質問欄へ.*Tab で欄に戻る.*\/now をもう一度/)).toBe('')
   await inline.unmount()
 })
 

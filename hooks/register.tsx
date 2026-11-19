@@ -926,7 +926,7 @@ export const register: Register = (on, options) => {
       <Box flexDirection="column">
         {isInlineTerminal && (
           <Box key="side-hint" flexDirection="column" marginBottom={1}>
-            <Text dimColor>この表示ではクリックが効かない。質問は /ask 質問の文、閉じるには /now をもう一度打つ</Text>
+            <Text dimColor>この表示ではクリックが効かない。/ask で質問欄へ(↓ でスクロール、Tab で欄に戻る)。閉じるには /now をもう一度打つ</Text>
             <Text dimColor>
               横に出すには、~/.claude/settings.json に "tui": "fullscreen" を足して、Claude Code を起動し直す
             </Text>
