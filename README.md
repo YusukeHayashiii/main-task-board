@@ -23,6 +23,19 @@ A Claude Code mod that pins a main-task board (goal, steps, open decisions) abov
 claude plugin install main-task-board --marketplace YusukeHayashiii/main-task-board
 ```
 
+## 更新のしかた
+
+新しい版が出たら、シェルで次の 2 行を打つ。1 行目で GitHub から新しい版の情報を取り、2 行目で入れてある mod を差し替える。
+
+```
+claude plugin marketplace update main-task-board
+claude plugin update main-task-board@main-task-board
+```
+
+入れるときにプロジェクトの範囲(project scope)を選んだときは、そのプロジェクトのフォルダで、2 行目に `--scope project` を付けて打つ。
+
+差し替えた後は、Claude Code を起動し直す。
+
 ## 画面
 
 ![メインタスクのボードと質問のパネル。右に全体の流れと決めることが並び、入力欄の上にメインタスクの要約が 1 行で出ている](docs/screenshot.png)
@@ -91,11 +104,6 @@ claude plugin install main-task-board --marketplace YusukeHayashiii/main-task-bo
 
 - ターミナルの Claude Code で動かして確かめている。ほかの画面(デスクトップアプリなど)では確かめていない
 - 画面の無い起動(`claude -p`)では、mod はコマンドもツールも足さない
-
-## 直すとき
-
-- `claude plugin validate <このフォルダ>` と `claude plugin test <このフォルダ>` を通す
-- 型検査は、Claude Code がこのフォルダに `.claude-plugin/types/` を書いた後に `npx -p typescript@5.6 tsc -p <このフォルダ>` で行う
 
 ## ライセンス
 
