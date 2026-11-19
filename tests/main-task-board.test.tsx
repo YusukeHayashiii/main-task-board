@@ -245,6 +245,23 @@ test('メインタスク: ツールで入れた内容が、入力欄の上とパ
   await ui.unmount()
 })
 
+test('パネル: ターミナルの通常の表示でだけ、横に出す方法を案内する', async ($, on) => {
+  world(on)
+  await $.session.start(SESSION)
+
+  const docked = await $.ui.mount(PANE)
+  expect(await hidden(docked, /"tui": "fullscreen"/)).toBe(true)
+  await docked.unmount()
+
+  const inline = await $.ui.mount({
+    ...PANE,
+    viewport: { ...VIEWPORT, isFullscreen: false },
+    props: { ...PANE.props, placement: 'inline' },
+  })
+  expect(await shown(inline, /横に出すには.*"tui": "fullscreen"/)).toBe('')
+  await inline.unmount()
+})
+
 test('質問: 回答がパネルに出る。既定では、ファイルを作らず、別のセッションも起動しない', async ($, on) => {
   const seen = world(on, '結論: 文字列を数値に変える関数です。\n\n原文で確かめること: parseInt の基数')
   await $.session.start(SESSION)

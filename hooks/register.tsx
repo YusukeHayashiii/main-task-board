@@ -876,8 +876,20 @@ export const register: Register = (on, options) => {
       </Box>
     )
 
+    // ターミナルの通常の表示では、パネルは横ではなく入力欄の上に出る。横に出す方法を 1 行で案内する。
+    // 表示を勝手に変えると Claude Code の画面全体が変わるので、mod からは変えない。
+    // isFullscreen が無い画面(表示のしかたを言わない画面)では出さない。
+    const isInlineTerminal = e.surface === 'terminal' && e.viewport?.isFullscreen === false
+
     return (
       <Box flexDirection="column">
+        {isInlineTerminal && (
+          <Box key="side-hint" marginBottom={1}>
+            <Text dimColor>
+              横に出すには、~/.claude/settings.json に "tui": "fullscreen" を足して、Claude Code を起動し直す
+            </Text>
+          </Box>
+        )}
         {heading('main', 'メインタスク')}
         {boardPart}
         {heading('ask', '質問', 'メインタスクを止めずに聞く')}

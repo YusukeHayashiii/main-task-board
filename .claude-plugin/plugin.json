@@ -6,6 +6,7 @@
     "name": "YusukeHayashiii"
   },
   "license": "MIT",
+  "icon": "./.claude-plugin/icon.png",
   "types": "./types/index.d.ts",
   "userConfig": {
     "reader": {
