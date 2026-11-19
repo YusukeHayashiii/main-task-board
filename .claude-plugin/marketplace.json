@@ -1,0 +1,13 @@
+{
+  "name": "main-task-board",
+  "description": "Claude Code の画面に、メインタスクのボードと、作業を止めずに聞ける質問のパネルを足す mod",
+  "owner": {
+    "name": "YusukeHayashiii"
+  },
+  "plugins": [
+    {
+      "name": "main-task-board",
+      "source": "./"
+    }
+  ]
+}

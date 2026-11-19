@@ -1,0 +1,30 @@
+{
+  "name": "main-task-board",
+  "version": "0.1.0",
+  "description": "メインタスクの現在地(目的、全体の流れ、決めること)を固定表示し、作業を止めずに聞く質問を横のパネルで受ける",
+  "author": {
+    "name": "YusukeHayashiii"
+  },
+  "license": "MIT",
+  "types": "./types/index.d.ts",
+  "userConfig": {
+    "reader": {
+      "type": "string",
+      "title": "読む人の説明",
+      "description": "質問の回答を書くモデルに伝える、あなたについての 1 文。例: 「SQL は書ける。フロントエンドには慣れていない」。空なら伝えない。",
+      "default": ""
+    },
+    "askLogDir": {
+      "type": "string",
+      "title": "質問ログのフォルダ",
+      "description": "質問と回答を追記するフォルダ。プロジェクトのルートから見たパスか、/ で始まる絶対パス。「YYMMDD_質問ログ.md」というファイルが作られる。空なら、ファイルには残さない。",
+      "default": ""
+    },
+    "webCheck": {
+      "type": "boolean",
+      "title": "回答を Web の原文で確かめる",
+      "description": "オンにすると、回答が確認を求めたときに、裏で別のセッション(claude -p)が Web を検索して回答を書き直す。別のセッションの分の費用と時間がかかり、質問の内容が検索に使われる。",
+      "default": false
+    }
+  }
+}
