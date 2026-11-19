@@ -245,7 +245,7 @@ function noteLayout(surface: string, viewport: { isFullscreen?: boolean } | unde
 // 通常の表示で、パネルの中身が収まる高さの見積もり。折り返しの分を足して多めに取る。
 // 画面に入りきらない分は Claude Code が削るので、多すぎても困らない。
 function paneRows(current: Board, view: AskView): number {
-  const hint = 2
+  const hint = 3
   const main = isEmpty(current)
     ? 1 + 3
     : 1 +
@@ -622,6 +622,14 @@ export const register: Register = (on, options) => {
 
   on('command.run', { command: 'now' }, async ($, e) => {
     isFullscreen = e.presentation.isFullscreen
+    // 通常の表示ではクリックが mod に届かず、パネルの × を押せない。開いているときの /now は閉じる。
+    if (!isFullscreen) {
+      const panes = await $.ui.panes().catch(() => [])
+      if (panes.some(one => one.id === PANE && one.isPlaced)) {
+        await $.ui.close({ id: PANE })
+        return {}
+      }
+    }
     const opened = await showPane($)
     if (opened.isPlaced) return {}
     const current = await read($, board)
@@ -917,7 +925,8 @@ export const register: Register = (on, options) => {
     return (
       <Box flexDirection="column">
         {isInlineTerminal && (
-          <Box key="side-hint" marginBottom={1}>
+          <Box key="side-hint" flexDirection="column" marginBottom={1}>
+            <Text dimColor>この表示ではクリックが効かない。質問は /ask 質問の文、閉じるには /now をもう一度打つ</Text>
             <Text dimColor>
               横に出すには、~/.claude/settings.json に "tui": "fullscreen" を足して、Claude Code を起動し直す
             </Text>

@@ -1,6 +1,6 @@
 {
   "name": "main-task-board",
-  "version": "0.1.2",
+  "version": "0.1.3",
   "description": "メインタスクの現在地(目的、全体の流れ、決めること)を固定表示し、作業を止めずに聞く質問を横のパネルで受ける",
   "author": {
     "name": "YusukeHayashiii"

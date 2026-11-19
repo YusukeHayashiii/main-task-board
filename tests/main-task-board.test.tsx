@@ -14,6 +14,7 @@ type World = {
   opened: string[]
   /** パネルを開くときに求めた高さ。求めなかったときは undefined。 */
   rows: (number | undefined)[]
+  closed: string[]
   toasts: string[]
   /** 質問でモデルに渡した文。 */
   prompts: string[]
@@ -37,6 +38,7 @@ function world(
     fills: [],
     opened: [],
     rows: [],
+    closed: [],
     toasts: [],
     prompts: [],
     registered: [],
@@ -59,13 +61,23 @@ function world(
 
     return { value: { tool: `mcp__${PLUGIN}__${e.name}` } }
   })
+  const shown = new Map<string, string>()
   on('ui.open', ($, e) => {
     seen.opened.push(e.id)
     seen.rows.push(e.rows)
+    shown.set(e.id, e.title ?? e.id)
 
     return { value: { isPlaced: true } }
   })
-  on('ui.panes', () => ({ value: [] }))
+  on('ui.close', ($, e) => {
+    seen.closed.push(e.id)
+    shown.delete(e.id)
+
+    return { value: undefined }
+  })
+  on('ui.panes', () => ({
+    value: [...shown].map(([id, title]) => ({ id, title, isShown: true, isFocused: false, isPlaced: true })),
+  }))
   on('ui.toast', ($, e) => {
     seen.toasts.push(e.text)
 
@@ -263,6 +275,7 @@ test('パネル: ターミナルの通常の表示でだけ、横に出す方法
     props: { ...PANE.props, placement: 'inline' },
   })
   expect(await shown(inline, /横に出すには.*"tui": "fullscreen"/)).toBe('')
+  expect(await shown(inline, /\/ask 質問の文.*\/now をもう一度/)).toBe('')
   await inline.unmount()
 })
 
@@ -277,6 +290,10 @@ test('パネル: 通常の表示では勝手に開かず、開くときは中身
   await $.command.run({ ...command('now'), presentation: { isFullscreen: false, columns: 180 } })
   expect(seen.opened).toEqual([PLUGIN])
   expect((seen.rows[0] ?? 0) > 10).toBe(true)
+
+  // クリックで × を押せないので、もう一度 /now を打つと閉じる。
+  await $.command.run({ ...command('now'), presentation: { isFullscreen: false, columns: 180 } })
+  expect(seen.closed).toEqual([PLUGIN])
   await band.unmount()
 })
 
