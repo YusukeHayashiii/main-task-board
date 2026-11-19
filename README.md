@@ -32,7 +32,7 @@ claude plugin marketplace update main-task-board
 claude plugin update main-task-board@main-task-board
 ```
 
-入れるときにプロジェクトの範囲(project scope)を選んだときは、そのプロジェクトのフォルダで、2 行目に `--scope project` を付けて打つ。
+入れるときにプロジェクトの範囲(project scope)を選んだときは、そのプロジェクトのフォルダで打つ。
 
 差し替えた後は、Claude Code を起動し直す。
 
