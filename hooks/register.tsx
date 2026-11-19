@@ -1,5 +1,5 @@
 import { atom, read, update } from 'claude-code'
-import type { EngineInterface, Register } from 'claude-code'
+import type { EngineInterface, PaneOpenArgs, Register } from 'claude-code'
 
 import type { Ask, AskView, Board, Decision, DecisionStatus, Step } from '../types'
 import { fitTables } from './tables'
@@ -234,10 +234,38 @@ async function addCommand($: EngineInterface, command: Parameters<EngineInterfac
   }
 }
 
+// ターミナルの表示のしかた。描くたびに画面から受け取る。分かるまでは undefined。
+// 通常の表示(全画面でない)では、パネルは入力欄の上に出て、中をスクロールできない。
+let isFullscreen: boolean | undefined
+
+function noteLayout(surface: string, viewport: { isFullscreen?: boolean } | undefined) {
+  if (surface === 'terminal' && viewport?.isFullscreen !== undefined) isFullscreen = viewport.isFullscreen
+}
+
+// 通常の表示で、パネルの中身が収まる高さの見積もり。折り返しの分を足して多めに取る。
+// 画面に入りきらない分は Claude Code が削るので、多すぎても困らない。
+function paneRows(current: Board, view: AskView): number {
+  const hint = 2
+  const main = isEmpty(current)
+    ? 1 + 3
+    : 1 +
+      1 +
+      (current.steps.length > 0 ? 2 + current.steps.length + (current.now !== '' ? 1 : 0) : current.now !== '' ? 2 : 0) +
+      (current.decisions.length > 0
+        ? 2 +
+          current.decisions.reduce((sum, one) => sum + 1 + (one.answer !== '' ? 1 : 0) + (one.note !== '' ? 1 : 0), 0)
+        : 0) +
+      2
+  const roots = view.list.filter(one => one.parentId === undefined).length
+  const questions = 3 + 5 + (roots === 0 ? 6 : Math.min(roots, 3) + 2 + 16)
+  return Math.ceil((hint + main + questions) * 1.2)
+}
+
 async function showPane($: EngineInterface, isFocused = false) {
-  return $.ui.open(
-    isFocused ? { id: PANE, title: PANE_TITLE, focus: true } : { id: PANE, title: PANE_TITLE },
-  )
+  const pane: PaneOpenArgs = isFocused ? { id: PANE, title: PANE_TITLE, focus: true } : { id: PANE, title: PANE_TITLE }
+  if (isFullscreen !== false) return $.ui.open(pane)
+
+  return $.ui.open({ ...pane, rows: paneRows(await read($, board), await read($, asks)) })
 }
 
 // ---------- 質問 ----------
@@ -576,7 +604,8 @@ export const register: Register = (on, options) => {
     }
 
     // 初めて中身が入ったら、横のパネルを出す(幅が足りなければ出ない)。
-    if (isEmpty(before) && !isEmpty(after)) {
+    // 通常の表示ではパネルが入力欄の上に出て会話を隠すので、勝手には開かない。
+    if (isFullscreen === true && isEmpty(before) && !isEmpty(after)) {
       const isOpen = (await $.ui.panes().catch(() => [])).some(one => one.id === PANE)
       if (!isOpen) void showPane($).catch(() => undefined)
     }
@@ -591,7 +620,8 @@ export const register: Register = (on, options) => {
 
   // ---------- コマンド(パネルのボタンと同じことができる) ----------
 
-  on('command.run', { command: 'now' }, async $ => {
+  on('command.run', { command: 'now' }, async ($, e) => {
+    isFullscreen = e.presentation.isFullscreen
     const opened = await showPane($)
     if (opened.isPlaced) return {}
     const current = await read($, board)
@@ -605,6 +635,7 @@ export const register: Register = (on, options) => {
   })
 
   on('command.run', { command: 'ask' }, async ($, e) => {
+    isFullscreen = e.presentation.isFullscreen
     const question = e.args.trim()
     const opened = await showPane($, question === '')
     if (question === '') {
@@ -625,6 +656,7 @@ export const register: Register = (on, options) => {
   // ---------- 入力欄の上: パネルを開くボタンと、メインタスクの 1 行 ----------
 
   on('ui.render', { component: 'AbovePrompt' }, async ($, e, next) => {
+    noteLayout(e.surface, e.viewport)
     const below = await next(e)
     if (e.props.hasSurvey) return below
 
@@ -679,6 +711,7 @@ export const register: Register = (on, options) => {
   // ---------- パネル: メインタスクと質問を、同じ画面に上下に並べる ----------
 
   on('ui.render', { component: 'Pane', requestId: PANE }, async ($, e) => {
+    noteLayout(e.surface, e.viewport)
     const { Box, Text, Button, Input, Markdown } = $.ui.resolve(e)
     // 幅に収まらない表は罫線が折り返して崩れるので、行ごとの箇条書きに直してから描く。
     const fit = (text: string) => fitTables(text, e.props.bodyColumns)

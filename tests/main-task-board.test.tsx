@@ -12,6 +12,8 @@ type World = {
   writes: Map<string, string>
   fills: string[]
   opened: string[]
+  /** パネルを開くときに求めた高さ。求めなかったときは undefined。 */
+  rows: (number | undefined)[]
   toasts: string[]
   /** 質問でモデルに渡した文。 */
   prompts: string[]
@@ -34,6 +36,7 @@ function world(
     writes: new Map(),
     fills: [],
     opened: [],
+    rows: [],
     toasts: [],
     prompts: [],
     registered: [],
@@ -58,6 +61,7 @@ function world(
   })
   on('ui.open', ($, e) => {
     seen.opened.push(e.id)
+    seen.rows.push(e.rows)
 
     return { value: { isPlaced: true } }
   })
@@ -260,6 +264,32 @@ test('パネル: ターミナルの通常の表示でだけ、横に出す方法
   })
   expect(await shown(inline, /横に出すには.*"tui": "fullscreen"/)).toBe('')
   await inline.unmount()
+})
+
+test('パネル: 通常の表示では勝手に開かず、開くときは中身が収まる高さを求める', async ($, on) => {
+  const seen = world(on)
+  await $.session.start(SESSION)
+  const band = await $.ui.mount({ ...BAND, viewport: { ...VIEWPORT, isFullscreen: false } })
+
+  await $.tool.call({ tool: TOOL, goal: '検索を足す', steps: ['調査', '実装'], current: 1 } as never)
+  expect(seen.opened).toEqual([])
+
+  await $.command.run({ ...command('now'), presentation: { isFullscreen: false, columns: 180 } })
+  expect(seen.opened).toEqual([PLUGIN])
+  expect((seen.rows[0] ?? 0) > 10).toBe(true)
+  await band.unmount()
+})
+
+test('パネル: 全画面の表示では、初めて中身が入ったら開き、高さは求めない', async ($, on) => {
+  const seen = world(on)
+  await $.session.start(SESSION)
+  const band = await $.ui.mount(BAND)
+
+  await $.tool.call({ tool: TOOL, goal: '検索を足す', steps: ['調査', '実装'], current: 1 } as never)
+  await until(() => seen.opened.length > 0)
+  expect(seen.opened).toEqual([PLUGIN])
+  expect(seen.rows).toEqual([undefined])
+  await band.unmount()
 })
 
 test('質問: 回答がパネルに出る。既定では、ファイルを作らず、別のセッションも起動しない', async ($, on) => {
